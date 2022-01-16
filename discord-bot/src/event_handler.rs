@@ -13,7 +13,7 @@ pub async fn handler() -> Result<(), Error> {
             .set_url("wss://rpc.polkadot.io:443")
             .build()
             .await
-            .map_err(|e| Error::Client(e.to_string()))?
+            .map_err(Error::Subxt)?
             .to_runtime_api();
 
     spawn(async move {
@@ -27,7 +27,7 @@ pub async fn handler() -> Result<(), Error> {
         let decoder = api.client.events_decoder();
         let mut sub = EventSubscription::<DefaultConfig>::new(sub, decoder);
         loop {
-            let raw = sub.next().await.unwrap().unwrap();
+            let _raw = sub.next().await.unwrap().unwrap();
         }
     });
 
