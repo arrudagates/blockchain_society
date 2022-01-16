@@ -14,7 +14,6 @@ use serenity::{
 };
 
 use commands::general::*;
-use tokio::spawn;
 
 mod commands;
 mod event_handler;
