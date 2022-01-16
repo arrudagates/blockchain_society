@@ -1,0 +1,6 @@
+[workspace]
+members = [
+    'discord-bot',
+    'blockchain',
+    'pallet-discord',
+]
