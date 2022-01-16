@@ -13,6 +13,7 @@ build = 'build.rs'
 [[bin]]
 name = 'blockchain-society-node'
 
+
 [package.metadata.docs.rs]
 targets = ['x86_64-unknown-linux-gnu']
 

@@ -1,6 +1,10 @@
 [workspace]
 members = [
     'discord-bot',
-    'blockchain',
+    'blockchain/node',
+    'blockchain/runtime',
     'pallet-discord',
 ]
+
+[profile.release]
+panic = 'unwind'
