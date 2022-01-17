@@ -23,7 +23,8 @@ pub mod pallet {
         type DiscordId: Parameter + Member + AtLeast32BitUnsigned + Default + Copy;
     }
 
-    pub type GuildMemberOf<T> = GuildMember<<T as frame_system::Config>::AccountId>;
+    pub type GuildMemberOf<T> =
+        GuildMember<<T as frame_system::Config>::AccountId, <T as pallet::Config>::DiscordId>;
 
     /// A ban from the discord server represented as (member, ban reason).
     pub type Ban<T> = (GuildMemberOf<T>, Vec<u8>);
@@ -55,8 +56,8 @@ pub mod pallet {
     #[pallet::generate_deposit(pub(super) fn deposit_event)]
     pub enum Event<T: Config> {
         BotAdded(T::AccountId),
-        MemberAdded(T::AccountId),
-        MemberBanned(T::AccountId, Vec<u8>),
+        MemberAdded(T::AccountId, T::DiscordId),
+        MemberBanned(T::AccountId, T::DiscordId, Vec<u8>),
         /// Name, color, hoist, position, permissions, mentionable
         RoleCreated(Vec<u8>, u64, bool, u64, Vec<Permissions>, bool),
         RoleAssigned(T::AccountId, Vec<u8>),
@@ -89,7 +90,11 @@ pub mod pallet {
         }
 
         #[pallet::weight(1000)]
-        pub fn add_member(origin: OriginFor<T>, member: T::AccountId) -> DispatchResult {
+        pub fn add_member(
+            origin: OriginFor<T>,
+            discord_id: T::DiscordId,
+            member: T::AccountId,
+        ) -> DispatchResult {
             ensure!(
                 Bots::<T>::get(ensure_signed(origin)?).is_some(),
                 Error::<T>::NoPermission
@@ -98,6 +103,7 @@ pub mod pallet {
             GuildMembers::<T>::insert(
                 member.clone(),
                 GuildMember {
+                    id: discord_id,
                     account: member.clone(),
                     roles: vec![],
                     deaf: false,
@@ -105,7 +111,7 @@ pub mod pallet {
                 },
             );
 
-            Self::deposit_event(Event::MemberAdded(member));
+            Self::deposit_event(Event::MemberAdded(member, discord_id));
 
             Ok(())
         }
@@ -126,9 +132,11 @@ pub mod pallet {
                     .take()
                     .ok_or(Error::<T>::NotAMemberOfTheGuild)?;
 
+                let discord_id = guild_member.id;
+
                 BannedMembers::<T>::insert(member.clone(), (guild_member, reason.clone()));
 
-                Self::deposit_event(Event::MemberBanned(member, reason));
+                Self::deposit_event(Event::MemberBanned(member, discord_id, reason));
 
                 Ok(())
             })

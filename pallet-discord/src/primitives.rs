@@ -5,7 +5,8 @@ use scale_info::TypeInfo;
 use sp_std::vec::Vec;
 
 #[derive(Encode, Decode, TypeInfo, Clone)]
-pub struct GuildMember<AccountId> {
+pub struct GuildMember<AccountId, DiscordId> {
+    pub id: DiscordId,
     pub account: AccountId,
     pub roles: Vec<Vec<u8>>,
     pub deaf: bool,
