@@ -1,0 +1,28 @@
+[package]
+name = "subxt-codegen"
+version = "0.2.0"
+authors = ["Parity Technologies <admin@parity.io>"]
+edition = "2021"
+
+license = "GPL-3.0"
+repository = "https://github.com/paritytech/subxt"
+documentation = "https://docs.rs/subxt-codegen"
+homepage = "https://www.parity.io/"
+description = "Generate an API for interacting with a substrate node from FRAME metadata"
+
+[dependencies]
+async-trait = "0.1.49"
+codec = { package = "parity-scale-codec", version = "2", default-features = false, features = ["derive", "full", "bit-vec"] }
+darling = "0.13.0"
+frame-metadata = "14.0"
+heck = "0.3.2"
+proc-macro2 = "1.0.24"
+proc-macro-crate = "0.1.5"
+proc-macro-error = "1.0.4"
+quote = "1.0.8"
+syn = "1.0.58"
+scale-info = { version = "1.0.0", features = ["bit-vec"] }
+
+[dev-dependencies]
+bitvec = { version = "0.20.1", default-features = false, features = ["alloc"] }
+pretty_assertions = "0.6.1"
