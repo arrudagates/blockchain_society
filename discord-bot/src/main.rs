@@ -22,7 +22,7 @@ mod primitives;
 struct Handler;
 
 #[group]
-#[commands(ping, givemeadmin)]
+#[commands(ping)]
 struct General;
 
 #[async_trait]
