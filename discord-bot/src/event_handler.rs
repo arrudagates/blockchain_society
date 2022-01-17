@@ -13,7 +13,7 @@ pub async fn handler() -> Result<(), Error> {
             .set_url("ws://127.0.0.1:9944")
             .build()
             .await
-            .map_err(|e| Error::Client(e.to_string()))?
+            .map_err(Error::Subxt)?
             .to_runtime_api();
 
     spawn(async move {
