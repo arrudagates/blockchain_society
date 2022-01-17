@@ -10,7 +10,7 @@ pub async fn handler() -> Result<(), Error> {
 
     let api: polkadot::RuntimeApi<DefaultConfig, DefaultExtra<DefaultConfig>> =
         ClientBuilder::new()
-            .set_url("wss://rpc.polkadot.io:443")
+            .set_url("ws://127.0.0.1:9944")
             .build()
             .await
             .map_err(Error::Subxt)?
@@ -27,7 +27,10 @@ pub async fn handler() -> Result<(), Error> {
         let decoder = api.client.events_decoder();
         let mut sub = EventSubscription::<DefaultConfig>::new(sub, decoder);
         loop {
-            let _raw = sub.next().await.unwrap().unwrap();
+            let raw = sub.next().await.unwrap().unwrap();
+            if raw.pallet == String::from("Discord") {
+                todo!()
+            }
         }
     });
 
