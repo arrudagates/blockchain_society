@@ -3,7 +3,6 @@ use std::{collections::HashSet, env::var};
 use dotenv::dotenv;
 use event_handler::handler;
 use primitives::Error;
-
 use serenity::{
     async_trait,
     client::{Context, EventHandler},
@@ -27,8 +26,10 @@ struct General;
 
 #[async_trait]
 impl EventHandler for Handler {
-    async fn ready(&self, _ctx: Context, about: Ready) {
+    async fn ready(&self, ctx: Context, about: Ready) {
         println!("{} is in!", about.user.name);
+
+        handler(ctx.http.clone()).await.unwrap();
     }
 }
 
@@ -70,8 +71,6 @@ async fn main() -> Result<(), Error> {
                 .prefix(PREFIX)
         })
         .group(&GENERAL_GROUP);
-
-    handler().await?;
 
     let mut client = Client::builder(&token)
         .event_handler(Handler)

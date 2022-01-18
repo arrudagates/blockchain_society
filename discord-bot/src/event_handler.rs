@@ -1,5 +1,8 @@
 use crate::primitives::{Error, MemberBanned};
 use codec::Decode;
+use serenity::http::Http;
+use serenity::model::prelude::*;
+use std::sync::Arc;
 use subxt::{ClientBuilder, DefaultConfig, DefaultExtra, EventSubscription};
 use tokio::spawn;
 
@@ -10,7 +13,7 @@ type MemberAdded = polkadot::discord::events::MemberAdded;
 type RoleCreated = polkadot::discord::events::RoleCreated;
 type RoleAssigned = polkadot::discord::events::RoleAssigned;
 
-pub async fn handler() -> Result<(), Error> {
+pub async fn handler(http: Arc<Http>) -> Result<(), Error> {
     env_logger::init();
 
     let api: polkadot::RuntimeApi<DefaultConfig, DefaultExtra<DefaultConfig>> =
@@ -22,6 +25,8 @@ pub async fn handler() -> Result<(), Error> {
             .to_runtime_api();
 
     spawn(async move {
+        let http = http.clone();
+
         let sub = api
             .client
             .rpc()
@@ -35,10 +40,11 @@ pub async fn handler() -> Result<(), Error> {
             match sub.next().await {
                 Some(sub_result) => match sub_result {
                     Ok(raw) => {
-                        if raw.pallet == String::from("Discord") {
+                        if raw.pallet == *"Discord" {
                             match raw.variant.as_str() {
                                 "BotAdded" => println!("{:?}", raw),
                                 "MemberBanned" => member_banned(
+                                    &http,
                                     <MemberBanned as Decode>::decode(&mut &raw.data[..]).unwrap(),
                                 )
                                 .await
@@ -75,8 +81,18 @@ pub async fn handler() -> Result<(), Error> {
     Ok(())
 }
 
-async fn member_banned(event: MemberBanned) -> Result<(), Error> {
-    println!("{:?}", event.0);
+async fn member_banned(http: &Http, event: MemberBanned) -> Result<(), Error> {
+    ChannelId::from(930077545020407821)
+        .send_message(http, |message| {
+            message.content(format!(
+                "Banning member: <@{}>\nwith reason: {}",
+                event.1,
+                String::from_utf8(event.2).unwrap()
+            ))
+        })
+        .await
+        .unwrap();
+
     Ok(())
 }
 
