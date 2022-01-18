@@ -50,6 +50,7 @@ pub async fn handler(http: Arc<Http>) -> Result<(), Error> {
                                 .await
                                 .unwrap(),
                                 "RoleCreated" => role_created(
+                                    &http,
                                     <RoleCreated as Decode>::decode(&mut &raw.data[..]).unwrap(),
                                 )
                                 .await
@@ -82,17 +83,16 @@ pub async fn handler(http: Arc<Http>) -> Result<(), Error> {
 }
 
 async fn member_banned(http: &Http, event: MemberBanned) -> Result<(), Error> {
+    let reason = String::from_utf8(event.2).map_err(Error::UTF8)?;
     ChannelId::from(930077545020407821)
         .send_message(http, |message| {
             message.content(format!(
                 "Banning member: <@{}>\nwith reason: {}",
-                event.1,
-                String::from_utf8(event.2).unwrap()
+                event.1, reason,
             ))
         })
         .await
-        .unwrap();
-
+        .map_err(Error::Serenity)?;
     Ok(())
 }
 
@@ -101,8 +101,27 @@ async fn member_added(event: MemberAdded) -> Result<(), Error> {
     Ok(())
 }
 
-async fn role_created(event: RoleCreated) -> Result<(), Error> {
-    println!("{:?}", event.0);
+async fn role_created(http: &Http, event: RoleCreated) -> Result<(), Error> {
+    let mut permissions: u64 = 0;
+    for perm in event.4 {
+        permissions += u64::pow(2, perm as u32);
+    }
+    let name = String::from_utf8(event.0).map_err(Error::UTF8)?;
+
+    GuildId::from(930077545020407818)
+        .create_role(http, |role| {
+            role.name(name)
+                .colour(event.1)
+                .hoist(event.2)
+                .position(event.3)
+                .permissions(serenity::model::Permissions::from_bits_truncate(
+                    permissions,
+                ))
+                .mentionable(event.5)
+        })
+        .await
+        .map_err(Error::Serenity)?;
+    // TODO: Send message to log/events channel
     Ok(())
 }
 
