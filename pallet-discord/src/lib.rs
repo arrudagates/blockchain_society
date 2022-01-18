@@ -59,8 +59,8 @@ pub mod pallet {
         MemberAdded(T::AccountId, T::DiscordId),
         MemberBanned(T::AccountId, T::DiscordId, Vec<u8>),
         /// Name, color, hoist, position, permissions, mentionable
-        RoleCreated(Vec<u8>, u64, bool, u64, Vec<Permissions>, bool),
-        RoleAssigned(T::AccountId, Vec<u8>),
+        RoleCreated(Vec<u8>, u64, bool, u8, Vec<Permissions>, bool),
+        RoleAssigned(T::AccountId, T::DiscordId, Vec<u8>),
     }
 
     #[pallet::error]
@@ -148,7 +148,7 @@ pub mod pallet {
             name: Vec<u8>,
             color: u64,
             hoist: bool,
-            position: u64,
+            position: u8,
             permissions: Vec<Permissions>,
             mentionable: bool,
         ) -> DispatchResult {
@@ -205,9 +205,7 @@ pub mod pallet {
                     .ok_or(Error::<T>::NotAMemberOfTheGuild)?;
                 old_member.roles.push(role_name.clone());
 
-                *guild_member = Some(old_member);
-
-                Self::deposit_event(Event::RoleAssigned(target, role_name));
+                Self::deposit_event(Event::RoleAssigned(target, old_member.id, role_name));
 
                 Ok(())
             })
