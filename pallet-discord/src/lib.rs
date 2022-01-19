@@ -31,6 +31,8 @@ pub mod pallet {
 
     pub type RoleOf<T> = Role<<T as pallet::Config>::DiscordId>;
 
+    pub type ChannelOf<T> = Channel<<T as pallet::Config>::DiscordId>;
+
     #[pallet::pallet]
     #[pallet::generate_store(pub(super) trait Store)]
     pub struct Pallet<T>(_);
@@ -49,6 +51,10 @@ pub mod pallet {
     pub type Roles<T: Config> = StorageMap<_, Blake2_128Concat, Vec<u8>, RoleOf<T>>;
 
     #[pallet::storage]
+    #[pallet::getter(fn get_channel)]
+    pub type Channels<T: Config> = StorageMap<_, Blake2_128Concat, Vec<u8>, ChannelOf<T>>;
+
+    #[pallet::storage]
     #[pallet::getter(fn get_bot)]
     pub type Bots<T: Config> = StorageMap<_, Blake2_128Concat, T::AccountId, ()>;
 
@@ -61,6 +67,22 @@ pub mod pallet {
         /// Name, color, hoist, position, permissions, mentionable
         RoleCreated(Vec<u8>, u64, bool, u8, Vec<Permissions>, bool),
         RoleAssigned(T::AccountId, T::DiscordId, Vec<u8>),
+        /// Name, channe_type, position, permissions, topic, nsfw, bitrate, user_limit, rate_limit_per_user, parent_id, voice_region
+        ChannelCreated(
+            Vec<u8>,
+            ChannelType,
+            u64,
+            Vec<(T::DiscordId, Vec<Permissions>)>,
+            Vec<u8>,
+            bool,
+            Option<u64>,
+            Option<u64>,
+            Option<u64>,
+            Option<T::DiscordId>,
+            Option<Vec<u8>>,
+        ),
+        /// Name
+        ChannelDeleted(Vec<u8>),
     }
 
     #[pallet::error]
@@ -75,6 +97,12 @@ pub mod pallet {
         NotAMemberOfTheGuild,
 
         RoleDoesntExist,
+
+        NotAVoiceChannel,
+
+        NotATextChannel,
+
+        ChannelDoesntExist,
     }
 
     #[pallet::call]
@@ -209,6 +237,101 @@ pub mod pallet {
 
                 Ok(())
             })
+        }
+
+        #[pallet::weight(1000)]
+        pub fn create_channel(
+            origin: OriginFor<T>,
+            channe_type: ChannelType,
+            position: u64,
+            permissions: Vec<(T::DiscordId, Vec<Permissions>)>,
+            name: Vec<u8>,
+            topic: Vec<u8>,
+            nsfw: bool,
+            bitrate: Option<u64>,
+            user_limit: Option<u64>,
+            rate_limit_per_user: Option<u64>,
+            parent_id: Option<T::DiscordId>,
+            voice_region: Option<Vec<u8>>,
+        ) -> DispatchResult {
+            ensure!(
+                Bots::<T>::get(ensure_signed(origin)?).is_some(),
+                Error::<T>::NoPermission
+            );
+
+            if bitrate.is_some() {
+                ensure!(
+                    channe_type == ChannelType::GUILD_VOICE,
+                    Error::<T>::NotAVoiceChannel
+                );
+            }
+
+            if bitrate.is_some() | user_limit.is_some() | voice_region.is_some() {
+                ensure!(
+                    channe_type == ChannelType::GUILD_VOICE,
+                    Error::<T>::NotAVoiceChannel
+                );
+            }
+
+            if rate_limit_per_user.is_some() {
+                ensure!(
+                    channe_type == ChannelType::GUILD_TEXT,
+                    Error::<T>::NotATextChannel
+                );
+            }
+
+            Channels::<T>::insert(
+                name.clone(),
+                Channel {
+                    id: None,
+                    channe_type: channe_type.clone(),
+                    position,
+                    permissions: permissions.clone(),
+                    name: name.clone(),
+                    topic: topic.clone(),
+                    nsfw,
+                    bitrate,
+                    user_limit,
+                    rate_limit_per_user,
+                    parent_id,
+                    voice_region: voice_region.clone(),
+                },
+            );
+
+            Self::deposit_event(Event::ChannelCreated(
+                name,
+                channe_type,
+                position,
+                permissions,
+                topic,
+                nsfw,
+                bitrate,
+                user_limit,
+                rate_limit_per_user,
+                parent_id,
+                voice_region,
+            ));
+
+            Ok(())
+        }
+
+        #[pallet::weight(1000)]
+        pub fn delete_channel(origin: OriginFor<T>, name: Vec<u8>) -> DispatchResult {
+            ensure!(
+                Bots::<T>::get(ensure_signed(origin)?).is_some(),
+                Error::<T>::NoPermission
+            );
+
+            ensure!(
+                Channels::<T>::get(name.clone()).is_some(),
+                Error::<T>::ChannelDoesntExist
+            );
+
+            Channels::<T>::remove(name.clone());
+
+            Self::deposit_event(Event::ChannelDeleted(name));
+
+            Ok(())
         }
     }
 }

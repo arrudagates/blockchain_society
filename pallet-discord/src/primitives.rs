@@ -41,14 +41,22 @@ pub struct Guild<DiscordId> {
 }
 
 #[derive(Encode, Decode, TypeInfo)]
-pub struct Channel<AccountId, DiscordId> {
-    pub id: DiscordId,
+pub struct Channel<DiscordId> {
+    pub id: Option<DiscordId>,
     pub channe_type: ChannelType,
     pub position: u64,
-    pub permission_overwrites: Vec<(AccountId, Vec<Permissions>)>,
+    pub permissions: Vec<(DiscordId, Vec<Permissions>)>,
+    pub name: Vec<u8>,
+    pub topic: Vec<u8>,
+    pub nsfw: bool,
+    pub bitrate: Option<u64>,
+    pub user_limit: Option<u64>,
+    pub rate_limit_per_user: Option<u64>,
+    pub parent_id: Option<DiscordId>,
+    pub voice_region: Option<Vec<u8>>,
 }
 
-#[derive(Encode, Decode, TypeInfo)]
+#[derive(Encode, Decode, TypeInfo, Debug, PartialEq, Eq, Clone)]
 pub enum ChannelType {
     GUILD_TEXT,
     GUILD_VOICE,
