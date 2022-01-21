@@ -16,6 +16,7 @@ pub mod polkadot {}
 
 type MemberAdded = polkadot::discord::events::MemberAdded;
 type RoleCreated = polkadot::discord::events::RoleCreated;
+type RoleDeleted = polkadot::discord::events::RoleDeleted;
 type ChannelCreated = polkadot::discord::events::ChannelCreated;
 type ChannelDeleted = polkadot::discord::events::ChannelDeleted;
 type ChannelType = polkadot::runtime_types::pallet_discord::primitives::ChannelType;
@@ -86,6 +87,16 @@ pub async fn handler(http: Arc<Http>) -> Result<(), Error> {
                                             Err(why) => Err(Error::Decode(why)),
                                         }
                                     },
+                                    "RoleDeleted" => {
+                                        let data = <RoleDeleted as Decode>::decode(&mut &raw.data[..]);
+                                        match data {
+                                            Ok(data) => role_deleted(
+                                                &http,
+                                                data,
+                                            ).await,
+                                            Err(why) => Err(Error::Decode(why)),
+                                        }
+                                    }
                                     "MemberAdded" => {
                                         let data = <MemberAdded as Decode>::decode(&mut &raw.data[..]);
                                         match data {
@@ -233,6 +244,27 @@ async fn role_assigned(
             .add_role(http, role.id)
             .await
             .map_err(Error::Serenity)?;
+    }
+
+    Ok(())
+}
+
+async fn role_deleted(http: &Http, event: RoleDeleted) -> Result<(), Error> {
+    let role_name = String::from_utf8(event.0).map_err(Error::UTF8)?;
+    let guild = GuildId::from(930077545020407818);
+    if let Some(role) = guild
+        .roles(http)
+        .await
+        .map_err(Error::Serenity)?
+        .values()
+        .find(|r| r.name == role_name)
+    {
+        guild
+            .delete_role(http, role.id)
+            .await
+            .map_err(Error::Serenity)?;
+    } else {
+        return Err(Error::Custom(String::from("404 Role not found")));
     }
 
     Ok(())
