@@ -17,6 +17,7 @@ use commands::general::*;
 mod commands;
 mod event_handler;
 mod primitives;
+mod util;
 
 struct Handler;
 
