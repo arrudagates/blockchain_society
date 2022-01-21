@@ -21,8 +21,8 @@ version = "1.15.0"
 features = ["macros", "rt-multi-thread"]
 
 [dependencies.subxt]
-#git = "https://github.com/paritytech/subxt"
-path = "../subxt"
+git = "https://github.com/paritytech/subxt"
+branch = "master"
 
 [dependencies.sp-keyring]
 package = "sp-keyring"

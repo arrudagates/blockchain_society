@@ -4,9 +4,6 @@ members = [
     'blockchain/node',
     'blockchain/runtime',
     'pallet-discord',
-
-    # Remove these later
-    "subxt", "subxt/cli", "subxt/codegen", "subxt/macro"
 ]
 
 [profile.release]

@@ -1,6 +1,6 @@
 use serenity::model::Permissions as SerenityPermissions;
 
-use crate::event_handler::Permissions;
+use crate::event_handler::polkadot::runtime_types::pallet_discord::primitives::Permissions;
 
 pub fn calculate_permissions(perms: Vec<Permissions>) -> SerenityPermissions {
     let mut permissions: u64 = 0;

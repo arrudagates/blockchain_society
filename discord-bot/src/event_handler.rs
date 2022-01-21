@@ -1,26 +1,27 @@
 #![allow(unused_variables, clippy::too_many_arguments)]
 
-use crate::handle_error;
-use crate::primitives::{Error, MemberBanned, RoleAssigned};
-use crate::util::calculate_permissions;
+use crate::{error::Error, handle_error, util::calculate_permissions};
 use codec::Decode;
-use serenity::model::prelude::*;
-use serenity::{http::Http, model::channel::ChannelType as SerenityChannelType};
+use serenity::{
+    http::Http,
+    model::{channel::ChannelType as SerenityChannelType, prelude::*},
+};
 use std::{collections::HashMap, sync::Arc};
-use subxt::sp_runtime::AccountId32;
-use subxt::{ClientBuilder, DefaultConfig, DefaultExtra, EventSubscription};
+use subxt::{
+    sp_runtime::AccountId32, ClientBuilder, DefaultConfig, DefaultExtra, EventSubscription,
+};
 use tokio::spawn;
 
 #[subxt::subxt(runtime_metadata_path = "../blockchain/metadata.scale")]
 pub mod polkadot {}
 
-type MemberAdded = polkadot::discord::events::MemberAdded;
-type RoleCreated = polkadot::discord::events::RoleCreated;
-type RoleDeleted = polkadot::discord::events::RoleDeleted;
-type ChannelCreated = polkadot::discord::events::ChannelCreated;
-type ChannelDeleted = polkadot::discord::events::ChannelDeleted;
-type ChannelType = polkadot::runtime_types::pallet_discord::primitives::ChannelType;
-pub type Permissions = polkadot::runtime_types::pallet_discord::primitives::Permissions;
+use polkadot::{
+    discord::events::{
+        ChannelCreated, ChannelDeleted, MemberAdded, MemberBanned, RoleAssigned, RoleCreated,
+        RoleDeleted,
+    },
+    runtime_types::pallet_discord::primitives::ChannelType,
+};
 
 pub async fn handler(http: Arc<Http>) -> Result<(), Error> {
     env_logger::init();
@@ -49,8 +50,8 @@ pub async fn handler(http: Arc<Http>) -> Result<(), Error> {
         let decoder = api.client.events_decoder();
         let mut sub = EventSubscription::<DefaultConfig>::new(sub, decoder);
         loop {
-            match sub.next().await {
-                Some(sub_result) => match sub_result {
+            if let Some(sub_result) = sub.next().await {
+                match sub_result {
                     Ok(raw) => {
                         if raw.pallet == *"Discord" {
                             handle_error! {
@@ -58,86 +59,64 @@ pub async fn handler(http: Arc<Http>) -> Result<(), Error> {
                                     "MemberBanned" => {
                                         let data = <MemberBanned as Decode>::decode(&mut &raw.data[..]);
                                         match data {
-                                            Ok(data) => member_banned(
-                                                &http,
-                                                &mut members,
-                                                data,
-                                            ).await,
+                                            Ok(data) => member_banned(&http, &mut members, data).await,
                                             Err(why) => Err(Error::Decode(why)),
                                         }
-                                    },
+                                    }
                                     "RoleCreated" => {
                                         let data = <RoleCreated as Decode>::decode(&mut &raw.data[..]);
                                         match data {
-                                            Ok(data) => role_created(
-                                                &http,
-                                                data,
-                                            ).await,
+                                            Ok(data) => role_created(&http, data).await,
                                             Err(why) => Err(Error::Decode(why)),
                                         }
-                                    },
+                                    }
                                     "RoleAssigned" => {
                                         let data = <RoleAssigned as Decode>::decode(&mut &raw.data[..]);
                                         match data {
-                                            Ok(data) => role_assigned(
-                                                &http,
-                                                &mut members,
-                                                data,
-                                            ).await,
+                                            Ok(data) => role_assigned(&http, &mut members, data).await,
                                             Err(why) => Err(Error::Decode(why)),
                                         }
-                                    },
+                                    }
                                     "RoleDeleted" => {
                                         let data = <RoleDeleted as Decode>::decode(&mut &raw.data[..]);
                                         match data {
-                                            Ok(data) => role_deleted(
-                                                &http,
-                                                data,
-                                            ).await,
+                                            Ok(data) => role_deleted(&http, data).await,
                                             Err(why) => Err(Error::Decode(why)),
                                         }
                                     }
                                     "MemberAdded" => {
                                         let data = <MemberAdded as Decode>::decode(&mut &raw.data[..]);
                                         match data {
-                                            Ok(data) => member_added(
-                                                &mut members,
-                                                data,
-                                            ).await,
+                                            Ok(data) => member_added(&mut members, data).await,
                                             Err(why) => Err(Error::Decode(why)),
                                         }
-                                    },
+                                    }
                                     "ChannelCreated" => {
-                                        let data = <ChannelCreated as Decode>::decode(&mut &raw.data[..]);
+                                        let data =
+                                            <ChannelCreated as Decode>::decode(&mut &raw.data[..]);
                                         match data {
-                                            Ok(data) => channel_created(
-                                                &http,
-                                                data,
-                                            ).await,
+                                            Ok(data) => channel_created(&http, data).await,
                                             Err(why) => Err(Error::Decode(why)),
                                         }
-                                    },
+                                    }
                                     "ChannelDeleted" => {
-                                        let data = <ChannelDeleted as Decode>::decode(&mut &raw.data[..]);
+                                        let data =
+                                            <ChannelDeleted as Decode>::decode(&mut &raw.data[..]);
                                         match data {
-                                            Ok(data) => channel_deleted(
-                                                &http,
-                                                data,
-                                            ).await,
+                                            Ok(data) => channel_deleted(&http, data).await,
                                             Err(why) => Err(Error::Decode(why)),
                                         }
-                                    },
-                                    _ => Err(Error::Custom(String::from("Unhandled socket event received"))),
+                                    }
+                                    _ => Err(Error::Custom(String::from(
+                                        "Unhandled socket event received",
+                                    ))),
                                 }
                             }
                         }
                     }
+
                     Err(why) => eprintln!("{:?}", Error::Subxt(why)),
-                },
-                _ => eprintln!(
-                    "{:?}",
-                    Error::Custom(String::from("Empty raw event received from socket"))
-                ),
+                }
             }
         }
     });

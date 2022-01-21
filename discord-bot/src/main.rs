@@ -1,8 +1,8 @@
 use std::{collections::HashSet, env::var};
 
 use dotenv::dotenv;
+use error::Error;
 use event_handler::handler;
-use primitives::Error;
 use serenity::{
     async_trait,
     client::{Context, EventHandler},
@@ -15,8 +15,8 @@ use serenity::{
 use commands::general::*;
 
 mod commands;
+mod error;
 mod event_handler;
-mod primitives;
 mod util;
 
 struct Handler;
