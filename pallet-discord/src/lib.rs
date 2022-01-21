@@ -68,6 +68,7 @@ pub mod pallet {
         /// Name, color, hoist, position, permissions, mentionable
         RoleCreated(Vec<u8>, u64, bool, u8, Vec<Permissions>, bool),
         RoleAssigned(T::AccountId, T::DiscordId, Vec<u8>),
+        RoleDeleted(Vec<u8>),
         /// Name, channel_type, position, permissions, topic, nsfw, bitrate, user_limit, rate_limit_per_user, parent_id, voice_region
         ChannelCreated(
             Vec<u8>,
@@ -238,6 +239,25 @@ pub mod pallet {
 
                 Ok(())
             })
+        }
+
+        #[pallet::weight(1000)]
+        pub fn delete_role(origin: OriginFor<T>, role_name: Vec<u8>) -> DispatchResult {
+            ensure!(
+                Bots::<T>::get(ensure_signed(origin)?).is_some(),
+                Error::<T>::NoPermission
+            );
+
+            ensure!(
+                Roles::<T>::get(role_name.clone()).is_some(),
+                Error::<T>::RoleDoesntExist
+            );
+
+            Roles::<T>::remove(role_name.clone());
+
+            Self::deposit_event(Event::RoleDeleted(role_name));
+
+            Ok(())
         }
 
         #[pallet::weight(1000)]
