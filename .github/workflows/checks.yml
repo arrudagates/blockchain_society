@@ -36,6 +36,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
+      - uses: actions-rs/toolchain@v1
+        with:
+          toolchain: nightly-2022-01-21
+          target: wasm32-unknown-unknown
       - name: Run clippy
         run: cargo clippy -- -D warnings
   fmt:
