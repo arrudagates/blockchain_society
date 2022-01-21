@@ -1,4 +1,4 @@
-#![allow(non_camel_case_types)]
+#![allow(non_camel_case_types, clippy::upper_case_acronyms)]
 
 use codec::{Decode, Encode};
 use scale_info::TypeInfo;
