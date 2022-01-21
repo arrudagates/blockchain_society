@@ -1,4 +1,8 @@
-#![allow(non_camel_case_types, clippy::upper_case_acronyms)]
+#![allow(
+    non_camel_case_types,
+    clippy::upper_case_acronyms,
+    clippy::unnecessary_cast
+)]
 
 use codec::{Decode, Encode};
 use scale_info::TypeInfo;
@@ -43,14 +47,14 @@ pub struct Guild<DiscordId> {
 #[derive(Encode, Decode, TypeInfo)]
 pub struct Channel<DiscordId> {
     pub id: Option<DiscordId>,
-    pub channe_type: ChannelType,
-    pub position: u64,
+    pub channel_type: ChannelType,
+    pub position: u32,
     pub permissions: Vec<(DiscordId, Vec<Permissions>)>,
     pub name: Vec<u8>,
     pub topic: Vec<u8>,
     pub nsfw: bool,
-    pub bitrate: Option<u64>,
-    pub user_limit: Option<u64>,
+    pub bitrate: Option<u32>,
+    pub user_limit: Option<u32>,
     pub rate_limit_per_user: Option<u64>,
     pub parent_id: Option<DiscordId>,
     pub voice_region: Option<Vec<u8>>,

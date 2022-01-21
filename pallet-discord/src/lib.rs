@@ -1,8 +1,9 @@
 #![cfg_attr(not(feature = "std"), no_std)]
+#![allow(clippy::too_many_arguments)]
 
 pub use pallet::*;
 
-mod primitives;
+pub mod primitives;
 
 #[frame_support::pallet]
 pub mod pallet {
@@ -67,16 +68,16 @@ pub mod pallet {
         /// Name, color, hoist, position, permissions, mentionable
         RoleCreated(Vec<u8>, u64, bool, u8, Vec<Permissions>, bool),
         RoleAssigned(T::AccountId, T::DiscordId, Vec<u8>),
-        /// Name, channe_type, position, permissions, topic, nsfw, bitrate, user_limit, rate_limit_per_user, parent_id, voice_region
+        /// Name, channel_type, position, permissions, topic, nsfw, bitrate, user_limit, rate_limit_per_user, parent_id, voice_region
         ChannelCreated(
             Vec<u8>,
             ChannelType,
-            u64,
+            u32,
             Vec<(T::DiscordId, Vec<Permissions>)>,
             Vec<u8>,
             bool,
-            Option<u64>,
-            Option<u64>,
+            Option<u32>,
+            Option<u32>,
             Option<u64>,
             Option<T::DiscordId>,
             Option<Vec<u8>>,
@@ -242,14 +243,14 @@ pub mod pallet {
         #[pallet::weight(1000)]
         pub fn create_channel(
             origin: OriginFor<T>,
-            channe_type: ChannelType,
-            position: u64,
+            channel_type: ChannelType,
+            position: u32,
             permissions: Vec<(T::DiscordId, Vec<Permissions>)>,
             name: Vec<u8>,
             topic: Vec<u8>,
             nsfw: bool,
-            bitrate: Option<u64>,
-            user_limit: Option<u64>,
+            bitrate: Option<u32>,
+            user_limit: Option<u32>,
             rate_limit_per_user: Option<u64>,
             parent_id: Option<T::DiscordId>,
             voice_region: Option<Vec<u8>>,
@@ -261,21 +262,21 @@ pub mod pallet {
 
             if bitrate.is_some() {
                 ensure!(
-                    channe_type == ChannelType::GUILD_VOICE,
+                    channel_type == ChannelType::GUILD_VOICE,
                     Error::<T>::NotAVoiceChannel
                 );
             }
 
             if bitrate.is_some() | user_limit.is_some() | voice_region.is_some() {
                 ensure!(
-                    channe_type == ChannelType::GUILD_VOICE,
+                    channel_type == ChannelType::GUILD_VOICE,
                     Error::<T>::NotAVoiceChannel
                 );
             }
 
             if rate_limit_per_user.is_some() {
                 ensure!(
-                    channe_type == ChannelType::GUILD_TEXT,
+                    channel_type == ChannelType::GUILD_TEXT,
                     Error::<T>::NotATextChannel
                 );
             }
@@ -284,7 +285,7 @@ pub mod pallet {
                 name.clone(),
                 Channel {
                     id: None,
-                    channe_type: channe_type.clone(),
+                    channel_type: channel_type.clone(),
                     position,
                     permissions: permissions.clone(),
                     name: name.clone(),
@@ -300,7 +301,7 @@ pub mod pallet {
 
             Self::deposit_event(Event::ChannelCreated(
                 name,
-                channe_type,
+                channel_type,
                 position,
                 permissions,
                 topic,
