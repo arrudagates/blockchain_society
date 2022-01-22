@@ -41,7 +41,7 @@ jobs:
           toolchain: nightly-2022-01-21
           target: wasm32-unknown-unknown
       - name: Run clippy
-        run: cargo clippy -p bs_bot -p pallet-discord -- -D warnings
+        run: cargo clippy -p blockchain-society-bot -p pallet-discord -- -D warnings
   fmt:
     runs-on: ubuntu-latest
     steps:
