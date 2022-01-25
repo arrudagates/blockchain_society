@@ -1,11 +1,16 @@
-#![allow(non_camel_case_types, clippy::upper_case_acronyms)]
+#![allow(
+    non_camel_case_types,
+    clippy::upper_case_acronyms,
+    clippy::unnecessary_cast
+)]
 
 use codec::{Decode, Encode};
 use scale_info::TypeInfo;
 use sp_std::vec::Vec;
 
 #[derive(Encode, Decode, TypeInfo, Clone)]
-pub struct GuildMember<AccountId> {
+pub struct GuildMember<AccountId, DiscordId> {
+    pub id: DiscordId,
     pub account: AccountId,
     pub roles: Vec<Vec<u8>>,
     pub deaf: bool,
@@ -18,7 +23,7 @@ pub struct Role<RoleId> {
     pub name: Vec<u8>,
     pub color: u64,
     pub hoist: bool,
-    pub position: u64,
+    pub position: u8,
     pub permissions: Vec<Permissions>,
     pub managed: bool,
     pub mentionable: bool,
@@ -40,14 +45,22 @@ pub struct Guild<DiscordId> {
 }
 
 #[derive(Encode, Decode, TypeInfo)]
-pub struct Channel<AccountId, DiscordId> {
-    pub id: DiscordId,
-    pub channe_type: ChannelType,
-    pub position: u64,
-    pub permission_overwrites: Vec<(AccountId, Vec<Permissions>)>,
+pub struct Channel<DiscordId> {
+    pub id: Option<DiscordId>,
+    pub channel_type: ChannelType,
+    pub position: u32,
+    pub permissions: Vec<(DiscordId, Vec<Permissions>)>,
+    pub name: Vec<u8>,
+    pub topic: Vec<u8>,
+    pub nsfw: bool,
+    pub bitrate: Option<u32>,
+    pub user_limit: Option<u32>,
+    pub rate_limit_per_user: Option<u64>,
+    pub parent_id: Option<DiscordId>,
+    pub voice_region: Option<Vec<u8>>,
 }
 
-#[derive(Encode, Decode, TypeInfo)]
+#[derive(Encode, Decode, TypeInfo, Debug, PartialEq, Eq, Clone)]
 pub enum ChannelType {
     GUILD_TEXT,
     GUILD_VOICE,
@@ -61,45 +74,45 @@ pub enum ChannelType {
 
 #[derive(Encode, Decode, TypeInfo, Clone, PartialEq, Eq, Debug)]
 pub enum Permissions {
-    CREATE_INSTANT_INVITE,
-    KICK_MEMBERS,
-    BAN_MEMBERS,
-    ADMINISTRATOR,
-    MANAGE_CHANNELS,
-    MANAGE_GUILD,
-    ADD_REACTIONS,
-    VIEW_AUDIT_LOG,
-    PRIORITY_SPEAKER,
-    STREAM,
-    VIEW_CHANNEL,
-    SEND_MESSAGES,
-    SEND_TTS_MESSAGES,
-    MANAGE_MESSAGES,
-    EMBED_LINKS,
-    ATTACH_FILES,
-    READ_MESSAGE_HISTORY,
-    MENTION_EVERYONE,
-    USE_EXTERNAL_EMOJIS,
-    VIEW_GUILD_INSIGHTS,
-    CONNECT,
-    SPEAK,
-    MUTE_MEMBERS,
-    DEAFEN_MEMBERS,
-    MOVE_MEMBERS,
-    USE_VAD,
-    CHANGE_NICKNAME,
-    MANAGE_NICKNAMES,
-    MANAGE_ROLES,
-    MANAGE_WEBHOOKS,
-    MANAGE_EMOJIS_AND_STICKERS,
-    USE_APPLICATION_COMMANDS,
-    REQUEST_TO_SPEAK,
-    MANAGE_EVENTS,
-    MANAGE_THREADS,
-    CREATE_PUBLIC_THREADS,
-    CREATE_PRIVATE_THREADS,
-    USE_EXTERNAL_STICKERS,
-    SEND_MESSAGES_IN_THREADS,
-    START_EMBEDDED_ACTIVITIES,
-    MODERATE_MEMBERS,
+    CREATE_INSTANT_INVITE = 0,
+    KICK_MEMBERS = 1,
+    BAN_MEMBERS = 2,
+    ADMINISTRATOR = 3,
+    MANAGE_CHANNELS = 4,
+    MANAGE_GUILD = 5,
+    ADD_REACTIONS = 6,
+    VIEW_AUDIT_LOG = 7,
+    PRIORITY_SPEAKER = 8,
+    STREAM = 9,
+    VIEW_CHANNEL = 10,
+    SEND_MESSAGES = 11,
+    SEND_TTS_MESSAGES = 12,
+    MANAGE_MESSAGES = 13,
+    EMBED_LINKS = 14,
+    ATTACH_FILES = 15,
+    READ_MESSAGE_HISTORY = 16,
+    MENTION_EVERYONE = 17,
+    USE_EXTERNAL_EMOJIS = 18,
+    VIEW_GUILD_INSIGHTS = 19,
+    CONNECT = 20,
+    SPEAK = 21,
+    MUTE_MEMBERS = 22,
+    DEAFEN_MEMBERS = 23,
+    MOVE_MEMBERS = 24,
+    USE_VAD = 25,
+    CHANGE_NICKNAME = 26,
+    MANAGE_NICKNAMES = 27,
+    MANAGE_ROLES = 28,
+    MANAGE_WEBHOOKS = 29,
+    MANAGE_EMOJIS_AND_STICKERS = 30,
+    USE_APPLICATION_COMMANDS = 31,
+    REQUEST_TO_SPEAK = 32,
+    MANAGE_EVENTS = 33,
+    MANAGE_THREADS = 34,
+    CREATE_PUBLIC_THREADS = 35,
+    CREATE_PRIVATE_THREADS = 36,
+    USE_EXTERNAL_STICKERS = 37,
+    SEND_MESSAGES_IN_THREADS = 38,
+    START_EMBEDDED_ACTIVITIES = 39,
+    MODERATE_MEMBERS = 40,
 }
